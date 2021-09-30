@@ -1,0 +1,23 @@
+version: '2'
+services:
+
+  datadog-parser:
+    build:
+      context: .
+      args:
+        - SKIP_TEST
+    image: paskal/data-parser:latest
+    hostname: datadog-parser
+    container_name: datadog-parser
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    volumes:
+    - ./sample.csv:/app/sample.csv:ro
+
+    environment:
+      FILEPATH: ./sample.csv

@@ -28,7 +28,7 @@ func TestParseRecord(t *testing.T) {
 				authuser:   "apache",
 				date:       time.Date(2019, 02, 07, 21, 11, 0, 0, time.UTC).In(time.Local),
 				request:    "GET /api/user HTTP/1.0",
-				section:    "api",
+				section:    "/api",
 				status:     200,
 				bytes:      1234,
 			},

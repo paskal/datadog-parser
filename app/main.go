@@ -27,6 +27,16 @@ func main() {
 		os.Exit(2)
 	}
 
+	if opts.AlertWindow == 0 {
+		log.Print("Alert window must be non-zero")
+		os.Exit(2)
+	}
+
+	if opts.AlertThresholdPerSecond == 0 {
+		log.Print("Alert threshold must be non-zero")
+		os.Exit(2)
+	}
+
 	var logReader *csv.Reader
 
 	// retrieve the recordReader either from file or from stdin
@@ -53,6 +63,10 @@ func main() {
 		cancel()
 	}()
 
-	logProcessor := record.Processor{LogReader: logReader}
+	logProcessor := record.Processor{
+		LogReader:               logReader,
+		AlertWindow:             opts.AlertWindow,
+		AlertThresholdPerSecond: opts.AlertThresholdPerSecond,
+	}
 	logProcessor.Start(ctx)
 }

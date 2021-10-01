@@ -40,10 +40,14 @@ func parseRecord(raw []string) *record {
 		return nil
 	}
 	r.date = time.Unix(timestamp, 0)
-	s := strings.Split(r.request, "/")
+	s := strings.Split(r.request, " ")
 	if len(s) < 2 {
 		return nil
 	}
-	r.section = s[1]
+	url := strings.Split(s[1], "/")
+	if len(url) < 2 {
+		return nil
+	}
+	r.section = "/" + url[1]
 	return &r
 }

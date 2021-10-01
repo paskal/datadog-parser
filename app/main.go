@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"encoding/csv"
-	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -29,21 +27,21 @@ func main() {
 		os.Exit(2)
 	}
 
-	var logReader record.Reader
-	var err error
+	var logReader *csv.Reader
 
 	// retrieve the recordReader either from file or from stdin
 	if opts.FilePath != "" {
-		var file io.Closer
-		logReader, file, err = getFileReader(opts.FilePath)
+		f, err := os.Open(opts.FilePath)
 		if err != nil {
 			log.Printf("Error opening csv file: %v", err)
 			os.Exit(3)
 		}
-		defer file.Close()
+		defer f.Close()
+		logReader = csv.NewReader(f)
 	} else {
-		logReader = getStdinReader()
+		logReader = csv.NewReader(os.Stdin)
 	}
+	logReader.FieldsPerRecord = 7
 
 	// catch TERM signal and invoke graceful termination
 	// otherwise it's impossible to test main()
@@ -57,18 +55,4 @@ func main() {
 
 	logProcessor := record.Processor{LogReader: logReader}
 	logProcessor.Start(ctx)
-}
-
-// getFileReader returns recordReader from given file
-func getFileReader(filePath string) (record.Reader, io.Closer, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error opening %v: %v", filePath, err)
-	}
-	return csv.NewReader(f), f, nil
-}
-
-// getStdinReader returns recordReader from stdin
-func getStdinReader() record.Reader {
-	return csv.NewReader(os.Stdin)
 }

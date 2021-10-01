@@ -10,10 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// it's possible to test the program this way, however it's not the easiest way to do that,
+// so business logic tests are in record package.
 func TestInput(t *testing.T) {
 	var testData = []struct{ description, input, output string }{
 		{
-			description: "empty",
+			description: "smoke test",
 			input:       "",
 			output:      "",
 		},
@@ -60,7 +62,7 @@ func testMain(t *testing.T, input, expectedOutput string) {
 	}()
 
 	// awful hack to give program enough time to write output to stdout
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second)
 
 	// restore stdout
 	w.Close()

@@ -23,7 +23,7 @@ jobs:
     - name: test and build
       run: |
         go test -race -timeout=60s ./...
-        go build -race -o datadog-parser ./...
+        go build -race -o datadog-parser ./app
 
     - name: install golangci-lint
       run: |

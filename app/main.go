@@ -12,17 +12,14 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
+
+	"github.com/paskal/datadog-parser/app/record"
 )
 
 type opts struct {
 	FilePath                string        `long:"filepath" env:"FILEPATH" default:"" description:"csv file path, stdin is used if not specified"`
 	AlertWindow             time.Duration `long:"alert_window" env:"ALERT_WINDOW" default:"2m" description:"alert windows"`
 	AlertThresholdPerSecond int           `long:"alert_threshold_per_sec" env:"ALERT_THRESHOLD_PER_SEC" default:"10" description:"threshold for alert, requests per second"`
-}
-
-// recordReader is a subset or csv.Reader functions used by the application
-type recordReader interface {
-	Read() ([]string, error)
 }
 
 func main() {
@@ -32,7 +29,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	var logReader recordReader
+	var logReader record.Reader
 	var err error
 
 	// retrieve the recordReader either from file or from stdin
@@ -58,35 +55,12 @@ func main() {
 		cancel()
 	}()
 
-	recordsChan := make(chan []string)
-	// endless log processing loop, wouldn't be terminated using context
-	go readLogRecords(recordsChan, logReader)
-
-	ticker := time.NewTicker(500 * time.Millisecond)
-	// main logic loop
-	for {
-		select {
-		case record := <-recordsChan:
-			processRecord(record)
-			ticker.Reset(500 * time.Millisecond)
-		case <-ticker.C: // ticker ensure we'll recover from alert if no new log entries exist
-			recalculateAlerts()
-		case <-ctx.Done():
-			return
-		}
-	}
-}
-
-// processRecord processes new record
-func processRecord(record []string) {
-}
-
-// recalculateAlerts recalculates alert state
-func recalculateAlerts() {
+	logProcessor := record.Processor{LogReader: logReader}
+	logProcessor.Start(ctx)
 }
 
 // getFileReader returns recordReader from given file
-func getFileReader(filePath string) (recordReader, io.Closer, error) {
+func getFileReader(filePath string) (record.Reader, io.Closer, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error opening %v: %v", filePath, err)
@@ -95,20 +69,6 @@ func getFileReader(filePath string) (recordReader, io.Closer, error) {
 }
 
 // getStdinReader returns recordReader from stdin
-func getStdinReader() recordReader {
+func getStdinReader() record.Reader {
 	return csv.NewReader(os.Stdin)
-}
-
-// readLogRecords sends new log reader to provided channel
-func readLogRecords(recordsChan chan<- []string, logReader recordReader) {
-	for {
-		record, err := logReader.Read()
-		// ignore all errors, sleep on EOF so that lines could be appended to the log file
-		if err == io.EOF {
-			// 500ms seems to be a decent compromise between missing not too much data and not burning the CPU away
-			time.Sleep(500 * time.Millisecond)
-			continue
-		}
-		recordsChan <- record
-	}
 }

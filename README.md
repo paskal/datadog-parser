@@ -18,7 +18,7 @@ cat ./sample.csv | docker run -i paskal/data-parser:latest --alert_threshold_per
 
 ### Read log from file
 
-To run datadog-parser against `sample.csv`, run `docker-compose up`. You can alter the `volumes` block to mount a different file and pass application options using the `environment` block.
+To run datadog-parser against [sample.csv](sample.csv), run `docker-compose up`. You can alter the `volumes` block to mount a different file and pass application options using the `environment` block.
 
 ### Application parameters
 
@@ -31,7 +31,7 @@ To run datadog-parser against `sample.csv`, run `docker-compose up`. You can alt
 
 ## Restrictions
 
-Newly appended lines to the log are processed. However, you'll need to restart the application if the log file reduces the size, like when `truncate -s0` was used to clean it.
+When using file as input, newly appended lines to the log are processed. However, you'll need to restart the application if the log file reduces the size, like when `truncate -s0` was used to clean it.
 
 ## Additional notes
 
